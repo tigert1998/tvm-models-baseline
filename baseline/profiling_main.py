@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--quantize", action="store_true")
     parser.add_argument("--target", default="x86")
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", default=9190)
+    parser.add_argument("--port", default=9190, type=int)
     parser.add_argument("--key", default="pixel4")
     args = parser.parse_args()
 
