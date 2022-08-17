@@ -12,6 +12,8 @@ import tvm.contrib.debugger.debug_executor as debug_executor
 from baseline.model_archive import *
 from baseline.utils import quantize
 
+import time
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
     parser.add_argument("--model", default="resnet18")
@@ -73,7 +75,11 @@ if __name__ == "__main__":
         )
     m.set_input(**lib.get_params())
 
-    print(m.profile())
+    report = m.profile()
+    print(report)
+
+    with open("%s.csv" % time.strftime("%Y%m%d-%H%M%S"), "w") as f:
+        f.write(report.csv())
 
     with torch.no_grad():
         outputs = model(*input_tensors)
@@ -81,4 +87,4 @@ if __name__ == "__main__":
         outputs = (outputs,)
     for i in range(len(outputs)):
         testing.assert_allclose(
-            m.get_output(i).numpy(), outputs[i].cpu().numpy(), rtol=1e-4)
+            m.get_output(i).numpy(), outputs[i].cpu().numpy(), rtol=1)
