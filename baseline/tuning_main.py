@@ -46,14 +46,14 @@ if __name__ == "__main__":
             builder="local", runner="local"
         )
     elif args.target == "arm":
-        target = "llvm -mtriple=aarch64-arm-none-eabi"
+        target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
         measure_option = autotvm.measure_option(
             builder=autotvm.LocalBuilder(build_func="ndk"),
             runner=autotvm.RPCRunner(args.key, args.host, args.port)
         )
 
     tuning_option = {
-        "n_trial": 1500,
+        "n_trial": 5000,
         "early_stopping": None,
         "measure_option": measure_option,
         "tuning_records": args.tuning_records,
