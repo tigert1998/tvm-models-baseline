@@ -47,7 +47,7 @@ if __name__ == "__main__":
     if args.target == "x86":
         target = "llvm -mcpu=core-avx2"
     elif args.target == "arm":
-        target = "llvm -mtriple=aarch64-arm-none-eabi"
+        target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
 
     with autotvm.apply_history_best(args.tuning_records):
         with tvm.transform.PassContext(opt_level=3, config={}):
