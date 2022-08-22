@@ -40,6 +40,14 @@ def get_bert_sample_input():
     return input_ids, attention_mask, token_type_ids
 
 
+def quantize_torch(model, inp):
+    model.fuse_model()
+    model.qconfig = torch.quantization.get_default_qconfig("fbgemm")
+    torch.quantization.prepare(model, inplace=True)
+    # Dummy calibration
+    model(inp[0])
+    torch.quantization.convert(model, inplace=True)
+
 def quantize(mod, params, data_aware, **kwargs):
     qconfig_kwargs = {
         "skip_dense_layer": False,
@@ -60,7 +68,7 @@ def tune_network(mod, params, target, tuning_option):
         mod["main"], target=target, params=params)
 
     for i, task in enumerate(tasks):
-        prefix = "[Task %2d/%2d] " % (i + 1, len(tasks))
+        prefix = "[Task %2d/%2d, %s] " % (i + 1, len(tasks), task.name)
         tuner = XGBTuner(task, loss_type="rank", feature_type="curve")
         tuner.tune(
             n_trial=min(tuning_option["n_trial"], len(task.config_space)),

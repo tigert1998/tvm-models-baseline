@@ -8,6 +8,7 @@ import tvm
 from tvm import autotvm, relay, testing
 from tvm.contrib import ndk, rpc, utils
 import tvm.contrib.debugger.debug_executor as debug_executor
+import tvm.contrib.graph_executor as runtime
 
 
 from baseline.utils import quantize_torch 
@@ -61,8 +62,7 @@ if __name__ == "__main__":
 
     if args.target == "x86":
         ctx = tvm.device(str(target), 0)
-        m = debug_executor.create(
-            lib.get_graph_json(), lib.get_lib(), ctx)
+        m = runtime.GraphModule(lib["default"](ctx))
     elif args.target == "arm":
         libname = "model.so"
         temp = utils.tempdir()
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         remote.upload(libpath)
         rlib = remote.load_module(libname)
         ctx = remote.cpu(0)
-        m = debug_executor.create(lib.get_graph_json(), rlib, ctx)
+        m = runtime.GraphModule(rlib["default"](ctx))
 
     for input_info, input_tensor in zip(input_infos, input_tensors):
         m.set_input(
@@ -80,17 +80,4 @@ if __name__ == "__main__":
             tvm.nd.array(input_tensor.cpu().numpy(), ctx)
         )
     m.set_input(**lib.get_params())
-
-    report = m.profile()
-    print(report)
-
-    with open("%s.csv" % time.strftime("%Y%m%d-%H%M%S"), "w") as f:
-        f.write(report.csv())
-
-    with torch.no_grad():
-        outputs = model(*input_tensors)
-    if not isinstance(outputs, tuple):
-        outputs = (outputs,)
-    for i in range(len(outputs)):
-        testing.assert_allclose(
-            m.get_output(i).numpy(), outputs[i].cpu().numpy(), rtol=1)
+    print(m.benchmark(ctx, number=1, repeat=600))

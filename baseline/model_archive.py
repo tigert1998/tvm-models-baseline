@@ -5,7 +5,7 @@ import torch
 import torchvision
 
 
-def bert_half():
+def bert_half(is_quantized=False):
     from blink_mm.networks.seq_models.bert import BERT
     from baseline.utils import get_bert_sample_input
 
@@ -15,7 +15,7 @@ def bert_half():
     return bert, (input_ids, attention_mask, token_type_ids)
 
 
-def bert_base():
+def bert_base(is_quantized=False):
     from blink_mm.networks.seq_models.bert import BERT
     from baseline.utils import get_bert_sample_input
 
@@ -25,17 +25,20 @@ def bert_base():
     return bert, (input_ids, attention_mask, token_type_ids)
 
 
-def resnet18():
+def resnet18(is_quantized=False):
     dummy_input = torch.randn(1, 3, 224, 224)
-    return torchvision.models.resnet18(pretrained=True), (dummy_input,)
+    if is_quantized:
+        return torchvision.models.quantization.resnet.resnet18(pretrained=True), (dummy_input,)
+    else:
+        return torchvision.models.resnet18(pretrained=True), (dummy_input,)
 
 
-def resnet50():
+def resnet50(is_quantized=False):
     dummy_input = torch.randn(1, 3, 224, 224)
     return torchvision.models.resnet50(pretrained=True), (dummy_input,)
 
 
-def resnet20():
+def resnet20(is_quantized=False):
     import blink_mm.networks.pytorch_resnet_cifar10.resnet as resnet
     from blink_mm.expers.train_cifar import strip_state_dict_prefix
     dummy_input = torch.randn(1, 3, 32, 32)
@@ -47,7 +50,7 @@ def resnet20():
     return model, (dummy_input,)
 
 
-def resnet32():
+def resnet32(is_quantized=False):
     import blink_mm.networks.pytorch_resnet_cifar10.resnet as resnet
     from blink_mm.expers.train_cifar import strip_state_dict_prefix
     dummy_input = torch.randn(1, 3, 32, 32)
