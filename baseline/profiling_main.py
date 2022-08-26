@@ -1,6 +1,5 @@
 import argparse
-
-import numpy as np
+import time
 
 import torch
 
@@ -20,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument("--quantize", action="store_true")
     parser.add_argument("--target", default="x86")
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", default=9190)
+    parser.add_argument("--port", default=9190, type=int)
     parser.add_argument("--key", default="pixel4")
     args = parser.parse_args()
 
@@ -45,7 +44,7 @@ if __name__ == "__main__":
     if args.target == "x86":
         target = "llvm -mcpu=core-avx2"
     elif args.target == "arm":
-        target = "llvm -mtriple=aarch64-arm-none-eabi"
+        target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
 
     with autotvm.apply_history_best(args.tuning_records):
         with tvm.transform.PassContext(opt_level=3, config={}):
@@ -73,7 +72,13 @@ if __name__ == "__main__":
         )
     m.set_input(**lib.get_params())
 
-    print(m.profile())
+    print(m.benchmark(ctx, number=1, repeat=600))
+
+    report = m.profile()
+    print(report)
+
+    with open("%s.csv" % time.strftime("%Y%m%d-%H%M%S"), "w") as f:
+        f.write(report.csv())
 
     with torch.no_grad():
         outputs = model(*input_tensors)
