@@ -49,7 +49,8 @@ if __name__ == "__main__":
         target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
         measure_option = autotvm.measure_option(
             builder=autotvm.LocalBuilder(build_func="ndk"),
-            runner=autotvm.RPCRunner(args.key, args.host, args.port)
+            runner=autotvm.RPCRunner(
+                args.key, args.host, args.port, timeout=60)
         )
 
     tuning_option = {

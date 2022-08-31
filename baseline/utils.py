@@ -60,7 +60,7 @@ def tune_network(mod, params, target, tuning_option):
         mod["main"], target=target, params=params)
 
     for i, task in enumerate(tasks):
-        prefix = "[Task %2d/%2d, %s] " % (i + 1, len(tasks), task.name)
+        prefix = "[Task %2d/%2d: %s] " % (i + 1, len(tasks), task.name)
         tuner = XGBTuner(task, loss_type="rank", feature_type="curve")
         tuner.tune(
             n_trial=min(tuning_option["n_trial"], len(task.config_space)),
