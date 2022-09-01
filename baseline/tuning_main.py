@@ -48,7 +48,7 @@ if __name__ == "__main__":
     elif args.target == "arm":
         target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
         measure_option = autotvm.measure_option(
-            builder=autotvm.LocalBuilder(build_func="ndk"),
+            builder=autotvm.LocalBuilder(build_func="ndk", timeout=60),
             runner=autotvm.RPCRunner(
                 args.key, args.host, args.port, timeout=60)
         )
