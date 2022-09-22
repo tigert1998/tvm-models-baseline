@@ -1,6 +1,6 @@
 from PIL import Image
 
-from tvm import autotvm, relay
+from tvm import autotvm, relay, auto_scheduler
 from tvm.autotvm.tuner import XGBTuner
 from tvm.contrib.download import download_testdata
 
@@ -72,3 +72,10 @@ def tune_network(mod, params, target, tuning_option):
                 autotvm.callback.log_to_file(tuning_option["tuning_records"]),
             ],
         )
+
+
+def tune_network_auto_scheduler(mod, params, target, tuning_option):
+    tasks, task_weights = auto_scheduler.extract_tasks(
+        mod["main"], params, target)
+    tuner = auto_scheduler.TaskScheduler(tasks, task_weights)
+    tuner.tune(tuning_option)
