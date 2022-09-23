@@ -1,20 +1,25 @@
+import os
 import argparse
 import time
 
 import torch
 
 import tvm
-from tvm import autotvm, relay, testing
+from tvm import autotvm, relay, testing, auto_scheduler
 from tvm.contrib import ndk, rpc, utils
 import tvm.contrib.debugger.debug_executor as debug_executor
 
-from baseline.model_archive import *
 from baseline.utils import quantize
+
+from blink_mm.tvm.export.model_archive import MODEL_ARCHIVE
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
     parser.add_argument("--model", default="resnet18")
-    parser.add_argument("--tuning-records", default="resnet18.json")
+    parser.add_argument("--tuner", default="autotvm",
+                        choices=["autotvm", "auto_scheduler"])
+    parser.add_argument("--tuning-records", nargs='?')
     parser.add_argument("--num-threads", default=1, type=int)
     parser.add_argument("--quantize", action="store_true")
     parser.add_argument("--target", default="x86")
@@ -27,7 +32,10 @@ if __name__ == "__main__":
 
     os.environ["TVM_NUM_THREADS"] = str(args.num_threads)
 
-    model, input_tensors = globals()[args.model]()
+    model_info = MODEL_ARCHIVE[args.model]
+
+    model = model_info["model"]()
+    input_tensors = model_info["input"]
     model.eval()
     scripted_model = torch.jit.trace(model, input_tensors).eval()
 
@@ -46,9 +54,18 @@ if __name__ == "__main__":
     elif args.target == "arm":
         target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
 
-    with autotvm.apply_history_best(args.tuning_records):
-        with tvm.transform.PassContext(opt_level=3, config={}):
-            lib = relay.build(mod, target=target, params=params)
+    def relay_build(use_auto_scheduler):
+        with tvm.transform.PassContext(opt_level=3, config={"relay.backend.use_auto_scheduler": use_auto_scheduler}):
+            return tvm.relay.build(mod, target=target, params=params)
+
+    if args.tuning_records is None:
+        lib = relay_build(False)
+    elif args.tuner == "autotvm":
+        with autotvm.apply_history_best(args.tuning_records):
+            lib = relay_build(False)
+    elif args.tuner == "auto_scheduler":
+        with auto_scheduler.ApplyHistoryBest(args.tuning_records):
+            lib = relay_build(True)
 
     if args.target == "x86":
         ctx = tvm.device(str(target), 0)

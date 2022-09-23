@@ -1,3 +1,4 @@
+import os
 import argparse
 
 import torch
@@ -8,8 +9,7 @@ from tvm import autotvm, auto_scheduler
 import tvm.relay
 
 from baseline.utils import quantize, tune_network, tune_network_auto_scheduler
-from baseline.model_archive import *
-
+from blink_mm.tvm.export.model_archive import MODEL_ARCHIVE
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
@@ -27,7 +27,10 @@ if __name__ == "__main__":
 
     os.environ["TVM_NUM_THREADS"] = str(args.num_threads)
 
-    model, input_tensors = globals()[args.model]()
+    model_info = MODEL_ARCHIVE[args.model]
+
+    model = model_info["model"]()
+    input_tensors = model_info["input"]
     scripted_model = torch.jit.trace(model, input_tensors).eval()
 
     input_infos = [
