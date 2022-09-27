@@ -44,7 +44,7 @@ if __name__ == "__main__":
         mod = quantize(mod, params, False)
 
     if args.target == "x86":
-        target = "llvm -mcpu=core-avx2"
+        target = "llvm -mcpu=cascadelake"
         if args.tuner == "autotvm":
             measure_option = autotvm.measure_option(
                 builder="local", runner="local"

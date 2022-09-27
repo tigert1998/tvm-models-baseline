@@ -50,7 +50,7 @@ if __name__ == "__main__":
         mod = quantize(mod, params, False)
 
     if args.target == "x86":
-        target = "llvm -mcpu=core-avx2"
+        target = "llvm -mcpu=cascadelake"
     elif args.target == "arm":
         target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
 
