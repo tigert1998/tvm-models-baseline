@@ -9,7 +9,7 @@ from tvm import autotvm, auto_scheduler
 import tvm.relay
 
 from baseline.utils import quantize, tune_network, tune_network_auto_scheduler
-from blink_mm.tvm.export.model_archive import MODEL_ARCHIVE
+from baseline.model_archive import MODEL_ARCHIVE
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")

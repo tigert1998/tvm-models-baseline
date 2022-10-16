@@ -1,43 +1,5 @@
-from PIL import Image
-
 from tvm import autotvm, relay, auto_scheduler
 from tvm.autotvm.tuner import XGBTuner
-from tvm.contrib.download import download_testdata
-
-import torch
-from torchvision import transforms
-
-
-def get_imagenet_preprocess():
-    return transforms.Compose(
-        [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225]
-            ),
-        ]
-    )
-
-
-def get_imagenet_sample_image():
-    img_url = "https://github.com/dmlc/mxnet.js/blob/main/data/cat.png?raw=true"
-    img_path = download_testdata(img_url, "cat.png", module="data")
-    return Image.open(img_path)
-
-
-def get_bert_sample_input():
-    from transformers import AutoTokenizer
-
-    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-    text = "[CLS] Who was Jim Henson ? [SEP] Jim Henson was a puppeteer [SEP]"
-    dic = tokenizer(text, padding="max_length", truncation=True, max_length=64)
-    input_ids = torch.tensor(dic["input_ids"])[None, :]
-    attention_mask = torch.tensor(dic["attention_mask"])[None, :]
-    token_type_ids = torch.tensor(dic["token_type_ids"])[None, :]
-    return input_ids, attention_mask, token_type_ids
 
 
 def quantize(mod, params, data_aware, **kwargs):

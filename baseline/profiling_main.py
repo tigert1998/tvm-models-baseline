@@ -5,14 +5,13 @@ import time
 import torch
 
 import tvm
-from tvm import autotvm, relay, testing, auto_scheduler
+from tvm import autotvm, testing, auto_scheduler
 from tvm.contrib import ndk, rpc, utils
 import tvm.contrib.debugger.debug_executor as debug_executor
 
 from baseline.utils import quantize
 
-from blink_mm.tvm.export.model_archive import MODEL_ARCHIVE
-
+from baseline.model_archive import MODEL_ARCHIVE
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("")
@@ -26,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=9190, type=int)
     parser.add_argument("--key", default="pixel4")
+    parser.add_argument("--opt-level", default=3, type=int)
     args = parser.parse_args()
 
     assert args.target in ["x86", "arm"]
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         target = "llvm -device=arm_cpu -mtriple=aarch64-linux-gnu -mattr=+v8.2a,+dotprod"
 
     def relay_build(use_auto_scheduler):
-        with tvm.transform.PassContext(opt_level=3, config={"relay.backend.use_auto_scheduler": use_auto_scheduler}):
+        with tvm.transform.PassContext(opt_level=args.opt_level, config={"relay.backend.use_auto_scheduler": use_auto_scheduler}):
             return tvm.relay.build(mod, target=target, params=params)
 
     if args.tuning_records is None:
