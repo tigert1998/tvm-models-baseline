@@ -4,8 +4,8 @@ from tvm.autotvm.tuner import XGBTuner
 
 def quantize(mod, params, data_aware, **kwargs):
     qconfig_kwargs = {
-        "skip_dense_layer": False,
-        "skip_conv_layers": []
+        # "skip_dense_layer": False,
+        # "skip_conv_layers": []
     }
     if data_aware:
         with relay.quantize.qconfig(calibrate_mode="kl_divergence", weight_scale="max", **qconfig_kwargs):
